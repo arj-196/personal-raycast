@@ -34,6 +34,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         hotKey = HotKey(keyCode: kVK_Space, modifiers: optionKey) { [weak self] in self?.window.toggle() }
         installStatusItem()
+        installEditMenu()
 
         // Opening the app by hand should show the launcher; --hidden is for future launch-at-login.
         if !CommandLine.arguments.contains("--hidden") {
@@ -94,5 +95,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func openLauncher() {
         window.show()
+    }
+
+    /// ⌘A/C/V/X/Z are main-menu key equivalents, not text-field keys, so without an Edit menu they do
+    /// nothing in the web view. An accessory app never shows its menu bar, so this menu stays hidden.
+    private func installEditMenu() {
+        let edit = NSMenu(title: "Edit")
+        edit.addItem(withTitle: "Undo", action: Selector(("undo:")), keyEquivalent: "z")
+        edit.addItem(withTitle: "Redo", action: Selector(("redo:")), keyEquivalent: "Z")
+        edit.addItem(.separator())
+        edit.addItem(withTitle: "Cut", action: #selector(NSText.cut(_:)), keyEquivalent: "x")
+        edit.addItem(withTitle: "Copy", action: #selector(NSText.copy(_:)), keyEquivalent: "c")
+        edit.addItem(withTitle: "Paste", action: #selector(NSText.paste(_:)), keyEquivalent: "v")
+        edit.addItem(withTitle: "Select All", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
+
+        let main = NSMenu()
+        main.addItem(NSMenuItem()) // The first item is the app menu, which macOS titles itself.
+        let editItem = main.addItem(withTitle: "Edit", action: nil, keyEquivalent: "")
+        editItem.submenu = edit
+        NSApp.mainMenu = main
     }
 }
