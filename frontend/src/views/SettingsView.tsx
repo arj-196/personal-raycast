@@ -97,7 +97,10 @@ function HotkeyRecorder({ hotkey, onChange }: { hotkey: Hotkey; onChange(next: H
       type="button"
       autoFocus
       className={recording ? "hotkey-recorder recording" : "hotkey-recorder"}
-      onClick={() => setRecording((r) => !r)}
+      onClick={() => {
+        button.current?.focus();
+        setRecording((r) => !r);
+      }}
     >
       {recording ? (
         held.length ? <Keycaps caps={hotkeyCaps({ modifiers: held, key: "" }).filter(Boolean)} /> : "Press a shortcut…"

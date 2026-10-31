@@ -39,7 +39,9 @@ export function FormScreen({ title, icon, submitTitle, onSubmit, children }: Pro
   };
 
   return (
-    <div className="screen" onKeyDown={onKeyDown}>
+    // tabIndex: WebKit doesn't focus buttons on click, so a click would leave focus on <body> and
+    // Esc / ⌘↵ would never reach this handler (macOS beeps instead). A focusable root catches it.
+    <div className="screen form-screen" tabIndex={-1} onKeyDown={onKeyDown}>
       <header className="search-bar form-header">
         <button className="back" onClick={navigation.pop} aria-label="Back" tabIndex={-1}>
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">

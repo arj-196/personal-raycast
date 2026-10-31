@@ -443,3 +443,6 @@ code {
 .hotkey-recorder.recording {
   border-color: var(--accent);
 }
+.form-screen:focus {
+  outline: none;
+}
