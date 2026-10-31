@@ -92,7 +92,8 @@ When the user asks to release, do these steps in order:
 3. Push `main` to `origin`. The repo has no remote yet; if that's still true, say so and
    skip this step.
 4. Run `./scripts/build-app.sh`. It rebuilds `build/Personal Raycast.app`. If the app is
-   open, the user has to quit and reopen it to load the new build, and macOS may ask for
-   Accessibility permission again because builds are ad-hoc signed.
+   open, the user has to quit and reopen it to load the new build. Builds are signed with
+   the local certificate from `scripts/setup-signing.sh`, so Accessibility stays granted; if
+   the build prints that it signed ad hoc, the certificate is missing and macOS will ask again.
 
 Report the commit hash and confirm that the push and the build both worked.

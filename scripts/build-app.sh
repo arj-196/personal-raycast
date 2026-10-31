@@ -42,7 +42,13 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 </plist>
 PLIST
 
-# Ad-hoc signature. Each rebuild changes it, so macOS may ask for Accessibility again.
-codesign --force --sign - "$APP/Contents/Resources/prc-backend"
-codesign --force --sign - "$APP"
+# Signs with the certificate from setup-signing.sh, so macOS keeps the Accessibility grant across
+# rebuilds. Without it, falls back to an ad-hoc signature, which macOS treats as a new app every build.
+IDENTITY="Personal Raycast Local Signing"
+if ! security find-certificate -c "$IDENTITY" >/dev/null 2>&1; then
+  echo "! no \"$IDENTITY\" certificate; signing ad hoc (run scripts/setup-signing.sh)"
+  IDENTITY="-"
+fi
+codesign --force --sign "$IDENTITY" "$APP/Contents/Resources/prc-backend"
+codesign --force --sign "$IDENTITY" "$APP"
 echo "✓ $APP"

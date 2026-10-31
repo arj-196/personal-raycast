@@ -31,7 +31,7 @@ open "build/Personal Raycast.app"
 
 The launcher shows on open (and when you open the app again). After that, use the hotkey (**⌥Space** by default) or the menu bar icon. While the app runs, a filled `{}` icon sits in the menu bar; it has no Dock icon. If you can't see the icon, the notch may be hiding it: ⌘-drag it further right, or check System Settings → Menu Bar. ⌥Space is also Raycast's default hotkey, so quit Raycast or rebind one of them first. Change it from the **Settings** command. If macOS or another app already holds a shortcut, Settings says so and keeps the old one. ⌃Space is macOS's "Select the previous input source" shortcut; if it's on (System Settings → Keyboard → Keyboard Shortcuts → Input Sources), turn it off first or macOS keeps the keystroke.
 
-Pasting snippets and auto-expansion need **Accessibility** permission (System Settings → Privacy & Security). Builds are ad-hoc signed, so macOS may ask again after a rebuild.
+Pasting snippets and auto-expansion need **Accessibility** permission (System Settings → Privacy & Security). Run `./scripts/setup-signing.sh` once before building: it adds a self-signed "Personal Raycast Local Signing" certificate to your login keychain, and `build-app.sh` signs with it so the grant survives rebuilds. The first signed build asks you to let `codesign` use the key (Always Allow). Without the certificate, builds are signed ad hoc and macOS asks again after every rebuild.
 
 Data (snippets, usage, settings) lives in `~/Library/Application Support/personal-raycast/data.db`. `PRC_DATA_DIR` overrides it.
 
