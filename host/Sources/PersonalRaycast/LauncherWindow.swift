@@ -99,7 +99,15 @@ final class LauncherWindow: NSObject, NSWindowDelegate {
         }
     }
 
+    /// Key status bounces between our own windows while the app activates (e.g. right after `open`),
+    /// so only hide once focus has actually left the app. The app-level case is `appDidResignActive`.
     func windowDidResignKey(_ notification: Notification) {
+        DispatchQueue.main.async { [weak self] in
+            if !NSApp.isActive { self?.hide() }
+        }
+    }
+
+    func appDidResignActive() {
         hide()
     }
 

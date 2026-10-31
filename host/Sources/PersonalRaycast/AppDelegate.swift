@@ -42,6 +42,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if ProcessInfo.processInfo.environment["PRC_UI_TESTING"] == "1" { installUITestingHook() }
     }
 
+    /// Another app took focus: dismiss the launcher, like Raycast.
+    func applicationDidResignActive(_ notification: Notification) {
+        window.appDidResignActive()
+    }
+
     /// `open` / double-click while already running.
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         window.show()
