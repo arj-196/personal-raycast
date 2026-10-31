@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "backend-dev",
+      "runtimeExecutable": "env",
+      "runtimeArgs": ["PRC_DEV_HTTP=5174", "PRC_DATA_DIR=/Users/arjun/Personal/apps/personal-raycast/.devdata", "bun", "run", "/Users/arjun/Personal/apps/personal-raycast/backend/src/index.ts"],
+      "port": 5174
+    },
+    {
+      "name": "frontend",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "--cwd", "/Users/arjun/Personal/apps/personal-raycast/frontend", "dev"],
+      "port": 5173
+    }
+  ]
+}
