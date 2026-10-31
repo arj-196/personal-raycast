@@ -39,8 +39,17 @@ The host handles `destination: "host"` itself. It forwards `destination: "backen
 | backend | `rootSearch.search({term})` → `{items}` | Snippets and commands. Snippet items carry `detail` (text + metadata) for the side pane |
 | backend | `rootSearch.execute({itemId, actionId?})` → `Effect` | `snippet:<id>` (default action `paste`) or `cmd:<name>` |
 | backend | `snippets.list/get/create/update/delete/isKeywordAvailable/keywords/execute/expand` | `expand({keyword})` serves the host's auto-expansion |
+| backend | `settings.getGeneralSettings()` → `{globalHotkey}` | Also read by the host at startup to register the saved hotkey |
+| backend | `settings.updateGeneralSettings({globalHotkey?})` → settings | Validates and stores in the `settings` table |
 | backend | `system.ping` | |
 | host | `raycast.showMainWindow`, `raycast.hideMainWindow({hud?})`, `raycast.pasteText({text, cursorFromEnd?})`, `raycast.quit` | |
+| host | `hotkey.updateGlobal({hotkey})` | Registers the launcher hotkey; rejects if it's taken, keeping the old one |
+| host | `hotkey.toggleRecording({enabled})` | Unregisters the hotkey while the settings recorder listens, and restores it after |
+
+A hotkey is `{modifiers: ("control"|"option"|"shift"|"command")[], key}`, where `key` is a DOM
+`KeyboardEvent.code` (`"Space"`, `"KeyK"`, `"F5"`). The default is `{modifiers: ["option"], key: "Space"}`.
+To change it, the frontend calls `host.hotkey.updateGlobal` first and saves with
+`backend.settings.updateGeneralSettings` only if that succeeds, the same order Raycast uses.
 
 | Notification | Sent when |
 |---|---|
@@ -64,7 +73,7 @@ Backend actions return an `Effect`, and the frontend applies it:
 | Effect | Frontend does |
 |---|---|
 | `{type:"hide", hud?}` | `host.raycast.hideMainWindow` and pops to root |
-| `{type:"push", route}` | pushes a view (`snippet-form`, with `id` to edit) |
+| `{type:"push", route}` | pushes a view (`snippet-form`, with `id` to edit, or `settings`) |
 | `{type:"paste", text, cursorFromEnd?}` | `host.raycast.pasteText`, which hides, pastes into the previously focused app, then moves the cursor |
 | `{type:"refresh", toast?}` | reloads the current view |
 | `{type:"quit"}` | `host.raycast.quit` |

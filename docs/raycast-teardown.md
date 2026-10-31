@@ -114,7 +114,15 @@ What `personal-raycast` does, and how Raycast compares.
 - **Observed:** the Swift binary has a status item controller (`ensureStatusItemController()`, `renderAndApplyStatusItemIcon(_:from:isDark:)`, "Deferring menu bar icon rendering until the frontend can render") and `NSStatusItem Preferred Position …` defaults keys, so Raycast renders its menu bar icon from the frontend and saves each item's position by autosave name.
 - **Adopted, simplified:** the host draws an SF Symbol (`curlybraces.square.fill`) as a template image and sets `autosaveName`, so the position is kept the same way. Nothing to render from the web view.
 
-## 6. Unknowns (not established)
+## 6. Changing the global hotkey
+
+- **Observed** (`frontend/` settings and welcome chunks): the frontend changes the hotkey in two steps: `ipc.host.hotkey.updateGlobal({hotkey})` registers it natively, then `ipc.backend.settings.updateGeneralSettings({globalHotkey})` persists it. Its undo path (welcome screen) restores the previous hotkey the same way, register then save. At startup the frontend reads general settings and calls `updateGlobal({hotkey: e.globalHotkey})` itself.
+- **Observed:** the recorder (`RawKeyboardEventsStore`) calls `host.hotkey.toggleRecording({enabled, suppress})` and receives raw key events from the host, so the host captures keystrokes, not the web view.
+- **Observed** (`backend/index.mjs`): `globalHotkey` is a structured value, `{kind: {type: "SingleKey" | "SingleStep" | "DoubleTap" | "MultiStep", shortcut: {modifiers: [{modifier}], key}}}`, listed under the settings key "Raycast Hotkey". The backend emits `emitUpdateGlobalHotkey` when it changes. `host.hotkey.commandSpaceAvailability` and `symbolicHotkeyStatus`/`enableSymbolicHotkey({symbolicHotkey:"spotlight"})` handle taking ⌘Space from Spotlight.
+- **Adopted:** the method names and the register-then-save order, so a shortcut macOS refuses is never saved.
+- **Departure:** the value is just `{modifiers, key}` with `key` a DOM `KeyboardEvent.code`; double-tap and multi-step hotkeys aren't supported. The web view records the keys (with `toggleRecording` only lifting the current hotkey so pressing it doesn't hide the window), and the host maps the code to a Carbon key code. That avoids native key capture for a one-field recorder. The host, not the frontend, applies the saved hotkey at startup (it asks the backend for `settings.getGeneralSettings` once the backend is up), so the hotkey works even if the web view fails to load. Settings is a pushed view, not a separate window. No symbolic-hotkey handling: a shortcut macOS holds (such as ⌃Space for input sources, when enabled) has to be freed in System Settings.
+
+## 7. Unknowns (not established)
 
 - Backend internals. `index.mjs` was not fully analyzed (REA timeout), so business logic, the ranking algorithm and DB schemas are unread.
 - The Coordinator ⇄ Node wire transport. The backend references stdio, `process.send` and `createServer`, but which one carries traffic was not observed.

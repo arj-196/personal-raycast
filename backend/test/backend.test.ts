@@ -37,7 +37,7 @@ describe("root search", () => {
   test("empty query lists every snippet by name, then the commands", async () => {
     await seed();
     const items = await search("");
-    expect(titles(items)).toEqual(["Address", "Email signature", "Meeting link", "Create Snippet", "Quit Personal Raycast"]);
+    expect(titles(items)).toEqual(["Address", "Email signature", "Meeting link", "Create Snippet", "Settings", "Quit Personal Raycast"]);
     expect(items[0]).toMatchObject({ kind: "snippet", section: "Snippets", accessory: ";addr" });
     expect(items.at(-1)).toMatchObject({ kind: "command", section: "Commands" });
   });
@@ -141,5 +141,29 @@ describe("snippets", () => {
     expect(await call("snippets.execute", { id: s.id, actionId: "copy" })).toEqual({ type: "hide", hud: "Copied Snippet" });
     expect(clipboard).toBe("Hello Friday");
     expect(await call("snippets.execute", { id: s.id, actionId: "edit" })).toEqual({ type: "push", route: { name: "snippet-form", id: s.id } });
+  });
+});
+
+describe("settings", () => {
+  test("default hotkey is ⌥Space", async () => {
+    expect(await call("settings.getGeneralSettings")).toEqual({ globalHotkey: { modifiers: ["option"], key: "Space" } });
+  });
+
+  test("a saved hotkey persists", async () => {
+    const globalHotkey = { modifiers: ["control"], key: "Space" };
+    expect(await call("settings.updateGeneralSettings", { globalHotkey })).toEqual({ globalHotkey });
+    expect(await call("settings.getGeneralSettings")).toEqual({ globalHotkey });
+  });
+
+  test("rejects a hotkey without a modifier or with an unknown one", async () => {
+    await expect(call("settings.updateGeneralSettings", { globalHotkey: { modifiers: [], key: "KeyK" } })).rejects.toThrow("modifier");
+    await expect(call("settings.updateGeneralSettings", { globalHotkey: { modifiers: ["hyper"], key: "KeyK" } })).rejects.toThrow("modifiers");
+    expect(await call("settings.updateGeneralSettings", { globalHotkey: { modifiers: [], key: "F5" } })).toMatchObject({
+      globalHotkey: { key: "F5" },
+    });
+  });
+
+  test("Settings command opens the settings view", async () => {
+    expect(await call("rootSearch.execute", { itemId: "cmd:settings" })).toEqual({ type: "push", route: { name: "settings" } });
   });
 });

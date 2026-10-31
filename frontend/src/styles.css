@@ -423,3 +423,23 @@ code {
   border-radius: 4px;
   background: var(--keycap);
 }
+.hotkey-recorder {
+  justify-self: start;
+  align-self: flex-start;
+  min-width: 140px;
+  min-height: 30px;
+  padding: 5px 10px;
+  border: 1px solid var(--field-border);
+  border-radius: 6px;
+  background: var(--field);
+  color: var(--secondary);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  outline: none;
+  cursor: pointer;
+}
+.hotkey-recorder:focus,
+.hotkey-recorder.recording {
+  border-color: var(--accent);
+}

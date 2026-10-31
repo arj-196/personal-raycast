@@ -1,19 +1,20 @@
 import AppKit
-import Carbon
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var backend: Backend!
     private var window: LauncherWindow!
     private var expander: SnippetExpander!
-    private var hotKey: HotKey?
+    private var hotKey: GlobalHotKeyController!
     private var statusItem: NSStatusItem?
+    private var openItem: NSMenuItem?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         let config = AppConfig.resolve()
         let paster = Paster()
         backend = Backend(command: config.backendCommand)
         window = LauncherWindow(config: config, backend: backend)
-        let host = HostHandlers(window: window, paster: paster, hud: HUD())
+        hotKey = GlobalHotKeyController { [weak self] in self?.window.toggle() }
+        let host = HostHandlers(window: window, paster: paster, hud: HUD(), hotKey: hotKey)
         window.bridge.host = host
         expander = SnippetExpander(backend: backend, paster: paster, isSuspended: { [weak self] in self?.window.isVisible ?? false })
 
@@ -26,15 +27,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
         backend.onStart = { [weak self] in
+            self?.backend.request("settings.getGeneralSettings", [String: Any]()) { result in
+                guard case let .success(value) = result, let self,
+                      let saved = Shortcut(json: (value as? [String: Any])?["globalHotkey"]), saved != self.hotKey.shortcut else { return }
+                try? self.hotKey.update(saved)
+            }
             self?.backend.request("snippets.keywords", [String: Any]()) { result in
                 if case let .success(value) = result, let keywords = value as? [String] { self?.expander.update(keywords: keywords) }
             }
         }
         backend.start()
 
-        hotKey = HotKey(keyCode: kVK_Space, modifiers: optionKey) { [weak self] in self?.window.toggle() }
+        // The default until the backend says which shortcut was saved.
+        hotKey.register(hotKey.shortcut)
         installStatusItem()
         installEditMenu()
+        hotKey.onChange = { [weak self] shortcut in self?.updateStatusItem(shortcut) }
 
         // Opening the app by hand should show the launcher; --hidden is for future launch-at-login.
         if !CommandLine.arguments.contains("--hidden") {
@@ -79,22 +87,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Keeps the position the user ⌘-drags it to, under "NSStatusItem Preferred Position <name>".
         item.autosaveName = "PersonalRaycast"
         item.button?.image = NSImage(systemSymbolName: "curlybraces.square.fill", accessibilityDescription: "Personal Raycast")
-        item.button?.toolTip = "Personal Raycast is running (⌥Space)"
 
         let menu = NSMenu()
         menu.addItem(withTitle: "Personal Raycast is running", action: nil, keyEquivalent: "").isEnabled = false
         menu.addItem(.separator())
-        let open = menu.addItem(withTitle: "Open Personal Raycast", action: #selector(openLauncher), keyEquivalent: " ")
-        open.keyEquivalentModifierMask = [.option]
+        let open = menu.addItem(withTitle: "Open Personal Raycast", action: #selector(openLauncher), keyEquivalent: "")
         open.target = self
+        openItem = open
         menu.addItem(.separator())
         menu.addItem(withTitle: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         item.menu = menu
         statusItem = item
-    }
-
-    @objc private func openLauncher() {
-        window.show()
+        updateStatusItem(hotKey.shortcut)
     }
 
     /// ⌘A/C/V/X/Z are main-menu key equivalents, not text-field keys, so without an Edit menu they do
@@ -114,5 +118,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let editItem = main.addItem(withTitle: "Edit", action: nil, keyEquivalent: "")
         editItem.submenu = edit
         NSApp.mainMenu = main
+    }
+
+    private func updateStatusItem(_ shortcut: Shortcut) {
+        statusItem?.button?.toolTip = "Personal Raycast is running (\(shortcut.display))"
+        openItem?.keyEquivalent = shortcut.menuKeyEquivalent
+        openItem?.keyEquivalentModifierMask = shortcut.menuModifiers
+    }
+
+    @objc private func openLauncher() {
+        window.show()
     }
 }

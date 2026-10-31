@@ -3,6 +3,7 @@ import { useNotification } from "./hooks.ts";
 import { hasNativeHost } from "./ipc.ts";
 import { NavigationProvider, useNavigation, type Screen } from "./navigation.tsx";
 import { RootView } from "./views/RootView.tsx";
+import { SettingsView } from "./views/SettingsView.tsx";
 import { SnippetForm } from "./views/SnippetForm.tsx";
 
 /** Matches Raycast's default "pop to root search after 90 seconds". */
@@ -38,6 +39,8 @@ function ScreenView({ screen }: { screen: Screen }) {
       return <RootView key={rootGeneration} />;
     case "snippet-form":
       return <SnippetForm id={screen.id} />;
+    case "settings":
+      return <SettingsView />;
   }
 }
 
@@ -58,7 +61,7 @@ function FocusTop({ depth }: { depth: number }) {
 
 function focusTop(select: boolean) {
   const top = document.querySelector<HTMLElement>(".stack-entry:not([hidden])");
-  const input = top?.querySelector<HTMLInputElement>("[data-search-input], input, textarea");
+  const input = top?.querySelector<HTMLInputElement>("[data-search-input], input, textarea, button[autofocus]");
   input?.focus();
   if (select) input?.select();
 }

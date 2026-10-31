@@ -2,9 +2,10 @@ import type { Database } from "bun:sqlite";
 import { UsageStore } from "./db.ts";
 import { matchScore, usageBoost } from "./fuzzy.ts";
 import { render } from "./placeholders.ts";
+import { SettingsStore } from "./settings.ts";
 import { SnippetStore, type SnippetInput } from "./snippets.ts";
 import type { System } from "./system.ts";
-import type { Action, Effect, GlyphName, Handlers, RootItem, Snippet } from "./types.ts";
+import type { Action, Effect, GeneralSettings, GlyphName, Handlers, RootItem, Snippet } from "./types.ts";
 
 const MAX_RESULTS = 40;
 
@@ -27,6 +28,7 @@ const CREATE_SNIPPET: Command = {
 
 const COMMANDS: Command[] = [
   CREATE_SNIPPET,
+  { id: "cmd:settings", title: "Settings", glyph: "gear", keywords: ["preferences", "hotkey", "shortcut"], effect: { type: "push", route: { name: "settings" } } },
   { id: "cmd:quit", title: "Quit Personal Raycast", glyph: "power", keywords: ["exit", "close"], effect: { type: "quit" } },
 ];
 
@@ -36,6 +38,7 @@ export function createBackend(options: BackendOptions): Handlers {
   const now = options.now ?? (() => new Date());
   const snippets = new SnippetStore(db);
   const usage = new UsageStore(db);
+  const settings = new SettingsStore(db);
 
   const snippetsChanged = () => {
     notify("snippets.keywordsChanged", { keywords: snippets.keywords() });
@@ -120,6 +123,10 @@ export function createBackend(options: BackendOptions): Handlers {
     "system.ping": () => ({ ok: true }),
     "rootSearch.search": ({ term = "" }: { term?: string }) => ({ items: search(term) }),
     "rootSearch.execute": execute,
+
+    "settings.getGeneralSettings": () => settings.get(),
+    /** The frontend applies a new hotkey with host.hotkey.updateGlobal first, then saves it here. */
+    "settings.updateGeneralSettings": (changes: Partial<GeneralSettings>) => settings.update(changes),
 
     "snippets.list": ({ term }: { term?: string }) => snippets.list(term),
     "snippets.get": ({ id }: { id: number }) => snippets.get(id),

@@ -4,6 +4,15 @@ import type { GlyphName, Icon as IconModel } from "../ipc.ts";
 const GLYPHS: Record<GlyphName, { tint: string; paths: ReactNode }> = {
   snippet: { tint: "#0a84ff", paths: <path d="M5 6h14M5 12h10M5 18h12" /> },
   "snippet-add": { tint: "#0a84ff", paths: <path d="M4 6h12M4 12h8M4 18h7M17 13v8M13 17h8" /> },
+  gear: {
+    tint: "#8e8e93",
+    paths: (
+      <>
+        <circle cx="12" cy="12" r="3" />
+        <path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1" />
+      </>
+    ),
+  },
   power: { tint: "#ff453a", paths: <path d="M12 3v9M17.7 6.6a8 8 0 1 1-11.4 0" /> },
 };
 

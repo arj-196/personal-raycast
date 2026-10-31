@@ -24,6 +24,11 @@ const MIGRATIONS = [
      count INTEGER NOT NULL,
      last_used_at INTEGER NOT NULL
    );`,
+  // One row per setting, the value JSON-encoded.
+  `CREATE TABLE settings (
+     key TEXT PRIMARY KEY,
+     value TEXT NOT NULL
+   );`,
 ];
 
 export function openDatabase(path: string): Database {

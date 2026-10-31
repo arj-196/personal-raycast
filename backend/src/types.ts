@@ -1,6 +1,6 @@
 export type Icon = { type: "glyph"; name: GlyphName };
 
-export type GlyphName = "snippet" | "snippet-add" | "power";
+export type GlyphName = "snippet" | "snippet-add" | "power" | "gear";
 
 export type Action = { id: string; title: string; shortcut?: string; destructive?: boolean };
 
@@ -17,7 +17,7 @@ export type RootItem = {
   actions: Action[];
 };
 
-export type Route = { name: "snippet-form"; id?: number };
+export type Route = { name: "snippet-form"; id?: number } | { name: "settings" };
 
 export type Toast = { style: "success" | "failure"; title: string; message?: string };
 
@@ -39,3 +39,10 @@ export type Snippet = {
 
 export type Handler = (params: any) => unknown | Promise<unknown>;
 export type Handlers = Record<string, Handler>;
+
+export type Modifier = "control" | "option" | "shift" | "command";
+
+/** A global shortcut. `key` is a DOM `KeyboardEvent.code` ("Space", "KeyK"); the host maps it to a key code. */
+export type Hotkey = { modifiers: Modifier[]; key: string };
+
+export type GeneralSettings = { globalHotkey: Hotkey };

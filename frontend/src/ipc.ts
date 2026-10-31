@@ -1,6 +1,6 @@
-import type { Effect, RootItem, Snippet } from "../../backend/src/types.ts";
+import type { Effect, GeneralSettings, Hotkey, RootItem, Snippet } from "../../backend/src/types.ts";
 
-export type { Action, Effect, Icon, GlyphName, RootItem, Route, Snippet, Toast } from "../../backend/src/types.ts";
+export type { Action, Effect, GeneralSettings, Hotkey, Icon, GlyphName, Modifier, RootItem, Route, Snippet, Toast } from "../../backend/src/types.ts";
 
 type SnippetInput = { name: string; text: string; keyword?: string | null };
 
@@ -18,6 +18,10 @@ type BackendApi = {
     isKeywordAvailable(p: { keyword: string; excludeId?: number }): Promise<boolean>;
     execute(p: { id: number; actionId: string }): Promise<Effect>;
   };
+  settings: {
+    getGeneralSettings(p: {}): Promise<GeneralSettings>;
+    updateGeneralSettings(p: Partial<GeneralSettings>): Promise<GeneralSettings>;
+  };
 };
 
 /** Methods served natively by the Swift shell (host/Sources/PersonalRaycast/HostHandlers.swift). */
@@ -26,6 +30,11 @@ type HostApi = {
     hideMainWindow(p?: { hud?: string }): Promise<null>;
     pasteText(p: { text: string; cursorFromEnd?: number }): Promise<null>;
     quit(p?: {}): Promise<null>;
+  };
+  hotkey: {
+    /** Registers the launcher shortcut; rejects if macOS or another app holds it. */
+    updateGlobal(p: { hotkey: Hotkey }): Promise<null>;
+    toggleRecording(p: { enabled: boolean }): Promise<null>;
   };
 };
 
