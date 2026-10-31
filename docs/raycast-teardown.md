@@ -104,7 +104,17 @@ The core methods are the ones an MVP would mirror:
 - **Notes**, **AI** (chat, Quick AI, AI commands, agents, MCP client, BYOK, local models via Ollama, skills, memory, screen awareness, dictation)
 - **Platform:** themes and theme studio, cloud sync, organizations, store, Pro gating, deeplinks (`raycast://`)
 
-## 5. Unknowns (not established)
+## 5. Snippets in root search and the menu bar icon
+
+What `personal-raycast` does, and how Raycast compares.
+
+- **Observed:** Raycast's root search chunk (`frontend/root-search-*.js`) has no snippet item type. Its backend registers a `snippet` dynamic placeholder kind and a "snippets search folding" listener (`setSnippetsSearchFoldedListener`), but individual snippets are reached through the "Search Snippets" command, not listed in root search.
+- **Departure:** root search here lists the snippets themselves, matched on name, keyword and text, with the text in a side pane (Raycast's `ray-list-item-detail` idea). Snippets are the only thing this launcher does, so a separate Search Snippets screen would be a second copy of the root list. App indexing, the calculator and quicklinks were removed for the same reason.
+- **Departure:** text matches need a plain substring. A fuzzy subsequence over a long snippet body matches almost any query.
+- **Observed:** the Swift binary has a status item controller (`ensureStatusItemController()`, `renderAndApplyStatusItemIcon(_:from:isDark:)`, "Deferring menu bar icon rendering until the frontend can render") and `NSStatusItem Preferred Position …` defaults keys, so Raycast renders its menu bar icon from the frontend and saves each item's position by autosave name.
+- **Adopted, simplified:** the host draws an SF Symbol (`curlybraces.square.fill`) as a template image and sets `autosaveName`, so the position is kept the same way. Nothing to render from the web view.
+
+## 6. Unknowns (not established)
 
 - Backend internals. `index.mjs` was not fully analyzed (REA timeout), so business logic, the ranking algorithm and DB schemas are unread.
 - The Coordinator ⇄ Node wire transport. The backend references stdio, `process.send` and `createServer`, but which one carries traffic was not observed.

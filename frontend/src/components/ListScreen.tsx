@@ -13,7 +13,6 @@ export type ListItemModel = {
   accessory?: string;
   icon: IconModel;
   actions: Action[];
-  argument?: { placeholder: string };
 };
 
 type Props<T extends ListItemModel> = {
@@ -23,7 +22,7 @@ type Props<T extends ListItemModel> = {
   searchText: string;
   onSearchTextChange(value: string): void;
   items: T[];
-  onAction(item: T, action: Action, argument?: string): void | Promise<void>;
+  onAction(item: T, action: Action): void | Promise<void>;
   detail?(item: T): ReactNode;
   emptyText?: string;
 };
@@ -32,21 +31,18 @@ export function ListScreen<T extends ListItemModel>(props: Props<T>) {
   const { items, searchText } = props;
   const navigation = useNavigation();
   const searchRef = useRef<HTMLInputElement>(null);
-  const argumentRef = useRef<HTMLInputElement>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [argument, setArgument] = useState("");
   const [panelOpen, setPanelOpen] = useState(false);
 
   const selectedIndex = Math.max(0, items.findIndex((item) => item.id === selectedId));
   const selected = items[selectedIndex];
 
   useEffect(() => setSelectedId(null), [searchText]);
-  useEffect(() => setArgument(""), [selected?.id]);
 
   const run = (item: T | undefined, action: Action | undefined) => {
     if (!item || !action) return;
     setPanelOpen(false);
-    void Promise.resolve(props.onAction(item, action, item.argument ? argument : undefined)).catch(navigation.fail);
+    void Promise.resolve(props.onAction(item, action)).catch(navigation.fail);
   };
 
   const move = (delta: number) => {
@@ -57,7 +53,6 @@ export function ListScreen<T extends ListItemModel>(props: Props<T>) {
 
   const onKeyDown = (event: React.KeyboardEvent) => {
     if (panelOpen) return;
-    const isArgumentField = event.target === argumentRef.current;
     if (event.key === "ArrowDown" || (event.ctrlKey && event.key === "n")) {
       event.preventDefault();
       move(1);
@@ -67,18 +62,13 @@ export function ListScreen<T extends ListItemModel>(props: Props<T>) {
     } else if (matchesShortcut(event, "⌘K")) {
       event.preventDefault();
       if (selected?.actions.length) setPanelOpen(true);
-    } else if (event.key === "Tab" && selected?.argument) {
-      event.preventDefault();
-      (isArgumentField ? searchRef : argumentRef).current?.focus();
     } else if (event.key === "Escape") {
       event.preventDefault();
-      if (isArgumentField) searchRef.current?.focus();
-      else if (searchText && navigation.depth === 1) props.onSearchTextChange("");
+      if (searchText && navigation.depth === 1) props.onSearchTextChange("");
       else navigation.back();
     } else if (event.key === "Enter" && !event.metaKey && !event.ctrlKey && !event.altKey) {
       event.preventDefault();
-      if (selected?.argument && !argument && !isArgumentField) argumentRef.current?.focus();
-      else run(selected, selected?.actions[0]);
+      run(selected, selected?.actions[0]);
     } else {
       const action = selected?.actions.find((a) => a.shortcut && matchesShortcut(event, a.shortcut));
       if (action) {
@@ -90,21 +80,9 @@ export function ListScreen<T extends ListItemModel>(props: Props<T>) {
 
   const sections = useMemo(() => groupBySection(items), [items]);
 
-  const argumentField = selected?.argument && (
-    <input
-      ref={argumentRef}
-      className="argument"
-      spellCheck={false}
-      placeholder={selected.argument.placeholder}
-      value={argument}
-      onChange={(e) => setArgument(e.target.value)}
-      size={Math.max(selected.argument.placeholder.length, argument.length) + 1}
-    />
-  );
-
   return (
     <div className="screen" onKeyDown={onKeyDown}>
-      <SearchBar ref={searchRef} value={searchText} placeholder={props.placeholder} onChange={props.onSearchTextChange} accessory={argumentField} />
+      <SearchBar ref={searchRef} value={searchText} placeholder={props.placeholder} onChange={props.onSearchTextChange} />
       <div className={props.detail ? "body split" : "body"}>
         <div className="list" role="listbox">
           {items.length === 0 && <div className="empty">{props.emptyText ?? "No Results"}</div>}

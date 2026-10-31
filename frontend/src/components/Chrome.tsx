@@ -18,7 +18,6 @@ type SearchBarProps = {
   placeholder: string;
   onChange(value: string): void;
   onKeyDown?(event: React.KeyboardEvent<HTMLInputElement>): void;
-  accessory?: ReactNode;
 };
 
 export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(function SearchBar(props, ref) {
@@ -43,7 +42,6 @@ export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(function S
         onChange={(e) => props.onChange(e.target.value)}
         onKeyDown={props.onKeyDown}
       />
-      {props.accessory}
     </header>
   );
 });

@@ -1,5 +1,7 @@
 import { Database } from "bun:sqlite";
 
+// Append only. The quicklinks table is unused since the launcher went snippets-only; it stays so
+// existing databases keep their data and migrate cleanly.
 const MIGRATIONS = [
   `CREATE TABLE snippets (
      id INTEGER PRIMARY KEY,

@@ -120,19 +120,6 @@ html:has(.window.dev) {
   background: var(--keycap);
   color: var(--secondary);
 }
-.argument {
-  border: 1px solid var(--field-border);
-  border-radius: 6px;
-  background: var(--field);
-  color: var(--text);
-  font: inherit;
-  padding: 5px 9px;
-  outline: none;
-  max-width: 260px;
-}
-.argument:focus {
-  border-color: var(--accent);
-}
 .form-title {
   font-size: 15px;
   font-weight: 500;
@@ -209,23 +196,15 @@ html:has(.window.dev) {
   border-radius: 5px;
   flex-shrink: 0;
 }
-.glyph.letter {
-  background: var(--keycap);
-  color: var(--secondary);
-  font-weight: 600;
-}
-.app-icon {
-  flex-shrink: 0;
-}
 
-/* Snippet detail */
-.snippet-detail pre {
+/* Item detail */
+.item-detail pre {
   margin: 0 0 16px;
   white-space: pre-wrap;
   word-break: break-word;
   font: 13px/1.5 ui-monospace, "SF Mono", Menlo, monospace;
 }
-.snippet-detail dl {
+.item-detail dl {
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 6px 16px;
@@ -234,10 +213,10 @@ html:has(.window.dev) {
   border-top: 1px solid var(--separator);
   font-size: 12px;
 }
-.snippet-detail dt {
+.item-detail dt {
   color: var(--secondary);
 }
-.snippet-detail dd {
+.item-detail dd {
   margin: 0;
   text-align: right;
 }

@@ -1,9 +1,12 @@
 import type { Database } from "bun:sqlite";
-import { matchScore } from "./fuzzy.ts";
+import { matchScore, normalize } from "./fuzzy.ts";
 import type { Snippet } from "./types.ts";
 
 type Row = { id: number; name: string; text: string; keyword: string | null; created_at: number; updated_at: number };
 export type SnippetInput = { name: string; text: string; keyword?: string | null };
+
+/** Ranks a hit in the text just below a substring hit in the name (see fuzzy.ts). */
+const TEXT_MATCH_SCORE = 250;
 
 const toSnippet = (row: Row): Snippet => ({
   id: row.id,
@@ -17,17 +20,25 @@ const toSnippet = (row: Row): Snippet => ({
 export class SnippetStore {
   constructor(private db: Database) {}
 
+  /** All snippets by name, or the ones matching `term`, best first. */
   list(term = ""): Snippet[] {
-    const all = (this.db.query("SELECT * FROM snippets ORDER BY name COLLATE NOCASE").all() as Row[]).map(toSnippet);
-    if (!term.trim()) return all;
-    return all
-      .map((snippet) => ({
-        snippet,
-        score: Math.max(matchScore(term, snippet.name, snippet.keyword ? [snippet.keyword] : []), matchScore(term, snippet.text) * 0.5),
-      }))
+    if (!term.trim()) return (this.db.query("SELECT * FROM snippets ORDER BY name COLLATE NOCASE").all() as Row[]).map(toSnippet);
+    return this.search(term).map((entry) => entry.snippet);
+  }
+
+  /**
+   * Fuzzy on name and keyword. The text only counts as a plain substring: a fuzzy subsequence
+   * would match almost any long snippet.
+   */
+  search(term: string): { snippet: Snippet; score: number }[] {
+    const query = normalize(term.trim());
+    return this.list()
+      .map((snippet) => {
+        const byName = matchScore(term, snippet.name, snippet.keyword ? [snippet.keyword] : []);
+        return { snippet, score: Math.max(byName, normalize(snippet.text).includes(query) ? TEXT_MATCH_SCORE : 0) };
+      })
       .filter((entry) => entry.score > 0)
-      .sort((a, b) => b.score - a.score)
-      .map((entry) => entry.snippet);
+      .sort((a, b) => b.score - a.score);
   }
 
   get(id: number): Snippet {

@@ -71,14 +71,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         backend.stop()
     }
 
+    /// The menu bar icon is how you tell the app is running (it has no Dock icon). A ⌘ glyph read as a
+    /// system icon, so it uses a filled {} that nothing else in the menu bar looks like.
     private func installStatusItem() {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        item.button?.image = NSImage(systemSymbolName: "command", accessibilityDescription: "Personal Raycast")
+        // Keeps the position the user ⌘-drags it to, under "NSStatusItem Preferred Position <name>".
+        item.autosaveName = "PersonalRaycast"
+        item.button?.image = NSImage(systemSymbolName: "curlybraces.square.fill", accessibilityDescription: "Personal Raycast")
+        item.button?.toolTip = "Personal Raycast is running (⌥Space)"
+
         let menu = NSMenu()
-        menu.addItem(withTitle: "Open Personal Raycast", action: #selector(openLauncher), keyEquivalent: " ").keyEquivalentModifierMask = [.option]
+        menu.addItem(withTitle: "Personal Raycast is running", action: nil, keyEquivalent: "").isEnabled = false
+        menu.addItem(.separator())
+        let open = menu.addItem(withTitle: "Open Personal Raycast", action: #selector(openLauncher), keyEquivalent: " ")
+        open.keyEquivalentModifierMask = [.option]
+        open.target = self
         menu.addItem(.separator())
         menu.addItem(withTitle: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
-        menu.items.first?.target = self
         item.menu = menu
         statusItem = item
     }

@@ -32,6 +32,22 @@ The host handles `destination: "host"` itself. It forwards `destination: "backen
 - The backend writes logs to stderr only. Stdout carries protocol lines and nothing else.
 - The host forwards every backend `notify` to all web views as `window.ipcNotification(method, params)`. It also consumes `snippets.keywordsChanged` itself, for auto-expansion.
 
+## Methods
+
+| Destination | Method | Notes |
+|---|---|---|
+| backend | `rootSearch.search({term})` → `{items}` | Snippets and commands. Snippet items carry `detail` (text + metadata) for the side pane |
+| backend | `rootSearch.execute({itemId, actionId?})` → `Effect` | `snippet:<id>` (default action `paste`) or `cmd:<name>` |
+| backend | `snippets.list/get/create/update/delete/isKeywordAvailable/keywords/execute/expand` | `expand({keyword})` serves the host's auto-expansion |
+| backend | `system.ping` | |
+| host | `raycast.showMainWindow`, `raycast.hideMainWindow({hud?})`, `raycast.pasteText({text, cursorFromEnd?})`, `raycast.quit` | |
+
+| Notification | Sent when |
+|---|---|
+| `snippets.keywordsChanged {keywords}` | a snippet is created, updated or deleted |
+| `rootSearch.invalidated {}` | same, so the root list reloads |
+| `raycast.mainWindowShown {hiddenForSeconds}` | host → frontend, each time the launcher opens |
+
 ## Dev bridge (browser only)
 
 `PRC_DEV_HTTP=5174 bun run backend/src/index.ts` serves:
@@ -48,8 +64,7 @@ Backend actions return an `Effect`, and the frontend applies it:
 | Effect | Frontend does |
 |---|---|
 | `{type:"hide", hud?}` | `host.raycast.hideMainWindow` and pops to root |
-| `{type:"push", route}` | pushes a view (`snippets-list`, `snippet-form`, `quicklinks-list`, `quicklink-form`) |
+| `{type:"push", route}` | pushes a view (`snippet-form`, with `id` to edit) |
 | `{type:"paste", text, cursorFromEnd?}` | `host.raycast.pasteText`, which hides, pastes into the previously focused app, then moves the cursor |
-| `{type:"toast", style, title, message?}` | shows a toast |
 | `{type:"refresh", toast?}` | reloads the current view |
 | `{type:"quit"}` | `host.raycast.quit` |

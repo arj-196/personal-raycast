@@ -69,8 +69,6 @@ export function NavigationProvider({ render }: { render: (entries: Entry[]) => R
             popToRoot();
             await ipc.host.raycast.pasteText({ text: effect.text, cursorFromEnd: effect.cursorFromEnd });
             return;
-          case "toast":
-            return showToast(effect);
           case "refresh":
             options.reload?.();
             if (effect.toast) showToast(effect.toast);

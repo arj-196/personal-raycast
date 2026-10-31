@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { Fragment, useCallback } from "react";
 import { ListScreen } from "../components/ListScreen.tsx";
 import { useNotification, useSearch } from "../hooks.ts";
 import { ipc, type RootItem } from "../ipc.ts";
@@ -13,15 +13,32 @@ export function RootView() {
 
   return (
     <ListScreen
-      title="Search"
-      placeholder="Search for apps and commands…"
+      title="Snippets"
+      placeholder="Search snippets…"
       searchText={term}
       onSearchTextChange={setTerm}
       items={items}
-      onAction={async (item, action, argument) => {
-        const effect = await ipc.backend.rootSearch.execute({ itemId: item.id, actionId: action.id, argument, term });
+      detail={(item) => item.detail && <ItemDetail detail={item.detail} />}
+      onAction={async (item, action) => {
+        const effect = await ipc.backend.rootSearch.execute({ itemId: item.id, actionId: action.id });
         await navigation.runEffect(effect, { reload });
       }}
     />
+  );
+}
+
+function ItemDetail({ detail }: { detail: NonNullable<RootItem["detail"]> }) {
+  return (
+    <div className="item-detail">
+      <pre>{detail.text}</pre>
+      <dl>
+        {detail.metadata.map(({ label, value }) => (
+          <Fragment key={label}>
+            <dt>{label}</dt>
+            <dd>{value}</dd>
+          </Fragment>
+        ))}
+      </dl>
+    </div>
   );
 }

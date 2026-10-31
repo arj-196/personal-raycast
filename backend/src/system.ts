@@ -1,23 +1,10 @@
 /** Side effects on the OS, behind an interface so tests can record them instead. */
 export interface System {
-  open(target: string, options?: { app?: string; reveal?: boolean }): Promise<void>;
   readClipboard(): Promise<string>;
   writeClipboard(text: string): Promise<void>;
 }
 
 export const macSystem: System = {
-  async open(target, options = {}) {
-    const args = ["open"];
-    if (options.reveal) args.push("-R");
-    if (options.app) args.push("-a", options.app);
-    args.push(target);
-    const proc = Bun.spawn(args, { stdout: "ignore", stderr: "pipe" });
-    if ((await proc.exited) !== 0) {
-      const stderr = await new Response(proc.stderr).text();
-      throw new Error(stderr.trim() || `open exited with ${proc.exitCode}`);
-    }
-  },
-
   async readClipboard() {
     const proc = Bun.spawn(["pbpaste"], { stdout: "pipe" });
     return new Response(proc.stdout).text();

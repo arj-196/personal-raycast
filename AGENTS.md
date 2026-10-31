@@ -48,11 +48,11 @@ use their API keys or account tokens. This app works locally.
 ## Code layout
 
 - `host/`: the Swift shell. It owns the non-activating panel, the global hotkey, the
-  WKWebView bridge, the `prc://` scheme for assets and app icons, pasting into the
+  menu bar icon, the WKWebView bridge, the `prc://` scheme for assets, pasting into the
   frontmost app and snippet keyword expansion.
 - `frontend/`: the React + Vite UI. Every call goes through `ipc.ts` as
   `ipc.<destination>.<namespace>.<method>`, the same shape Raycast uses.
-- `backend/`: Bun. Root search ranking, calculator, snippets and quicklinks, stored in
+- `backend/`: Bun. Root search over snippets, and snippet storage in
   `bun:sqlite`.
 - `docs/`: the teardown and the IPC protocol.
 

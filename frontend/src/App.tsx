@@ -2,11 +2,8 @@ import { useEffect, useState } from "react";
 import { useNotification } from "./hooks.ts";
 import { hasNativeHost } from "./ipc.ts";
 import { NavigationProvider, useNavigation, type Screen } from "./navigation.tsx";
-import { QuicklinkForm } from "./views/QuicklinkForm.tsx";
-import { QuicklinksList } from "./views/QuicklinksList.tsx";
 import { RootView } from "./views/RootView.tsx";
 import { SnippetForm } from "./views/SnippetForm.tsx";
-import { SnippetsList } from "./views/SnippetsList.tsx";
 
 /** Matches Raycast's default "pop to root search after 90 seconds". */
 const POP_TO_ROOT_AFTER_SECONDS = 90;
@@ -39,14 +36,8 @@ function ScreenView({ screen }: { screen: Screen }) {
   switch (screen.name) {
     case "root":
       return <RootView key={rootGeneration} />;
-    case "snippets-list":
-      return <SnippetsList />;
     case "snippet-form":
       return <SnippetForm id={screen.id} />;
-    case "quicklinks-list":
-      return <QuicklinksList />;
-    case "quicklink-form":
-      return <QuicklinkForm id={screen.id} />;
   }
 }
 

@@ -1,17 +1,15 @@
-import type { Effect, RootItem, Snippet, Quicklink, App } from "../../backend/src/types.ts";
+import type { Effect, RootItem, Snippet } from "../../backend/src/types.ts";
 
-export type { Action, Effect, Icon, GlyphName, RootItem, Route, Snippet, Quicklink, Toast, App } from "../../backend/src/types.ts";
+export type { Action, Effect, Icon, GlyphName, RootItem, Route, Snippet, Toast } from "../../backend/src/types.ts";
 
 type SnippetInput = { name: string; text: string; keyword?: string | null };
-type QuicklinkInput = { name: string; link: string; openWith?: string | null };
 
 /** Methods served by the Bun backend (backend/src/backend.ts). */
 type BackendApi = {
   rootSearch: {
     search(p: { term: string }): Promise<{ items: RootItem[] }>;
-    execute(p: { itemId: string; actionId?: string; argument?: string; term?: string }): Promise<Effect>;
+    execute(p: { itemId: string; actionId?: string }): Promise<Effect>;
   };
-  apps: { list(p?: {}): Promise<App[]> };
   snippets: {
     list(p: { term?: string }): Promise<Snippet[]>;
     get(p: { id: number }): Promise<Snippet>;
@@ -19,13 +17,6 @@ type BackendApi = {
     update(p: SnippetInput & { id: number }): Promise<Snippet>;
     isKeywordAvailable(p: { keyword: string; excludeId?: number }): Promise<boolean>;
     execute(p: { id: number; actionId: string }): Promise<Effect>;
-  };
-  quicklinks: {
-    list(p: { term?: string }): Promise<(Quicklink & { hasArgument: boolean })[]>;
-    get(p: { id: number }): Promise<Quicklink>;
-    create(p: QuicklinkInput): Promise<Quicklink>;
-    update(p: QuicklinkInput & { id: number }): Promise<Quicklink>;
-    execute(p: { id: number; actionId: string; argument?: string }): Promise<Effect>;
   };
 };
 
