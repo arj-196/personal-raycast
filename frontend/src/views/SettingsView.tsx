@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Field, FormScreen } from "../components/FormScreen.tsx";
 import { Icon } from "../components/Icon.tsx";
 import { hasNativeHost, ipc, type Hotkey, type Modifier } from "../ipc.ts";
@@ -47,39 +47,57 @@ const MODIFIER_KEYS = new Set(["Control", "Alt", "Shift", "Meta"]);
 function HotkeyRecorder({ hotkey, onChange }: { hotkey: Hotkey; onChange(next: Hotkey): void }) {
   const [recording, setRecording] = useState(false);
   const [held, setHeld] = useState<Modifier[]>([]);
+  const button = useRef<HTMLButtonElement>(null);
+  const latestOnChange = useRef(onChange);
+  latestOnChange.current = onChange;
 
-  const toggle = (enabled: boolean) => {
-    if (enabled === recording) return;
-    setRecording(enabled);
-    setHeld([]);
-    // Lifts the current hotkey while listening, so pressing it doesn't hide the window.
-    void ipc.host.hotkey.toggleRecording({ enabled });
-  };
-
-  useEffect(() => () => void (recording && ipc.host.hotkey.toggleRecording({ enabled: false })), [recording]);
-
-  const onKeyDown = (event: React.KeyboardEvent) => {
+  // Listens on the window, not the button: WebKit doesn't focus a button on click, so the button
+  // never gets key events, and unhandled keys make macOS beep.
+  useEffect(() => {
     if (!recording) return;
-    event.preventDefault();
-    event.stopPropagation();
-    const modifiers = modifiersOf(event);
-    if (event.key === "Escape" && !modifiers.length) return toggle(false);
-    if (MODIFIER_KEYS.has(event.key)) return setHeld(modifiers);
-    // A bare key would swallow that key everywhere; function keys are the exception.
-    if (!modifiers.length && !/^F\d+$/.test(event.code)) return;
-    toggle(false);
-    onChange({ modifiers, key: event.code });
-  };
+    // Lifts the current hotkey while listening, so pressing it doesn't hide the window.
+    void ipc.host.hotkey.toggleRecording({ enabled: true });
+    const stop = () => setRecording(false);
+    const onKeyDown = (event: KeyboardEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const modifiers = modifiersOf(event);
+      if (event.key === "Escape" && !modifiers.length) return stop();
+      if (MODIFIER_KEYS.has(event.key)) return setHeld(modifiers);
+      // A bare key would swallow that key everywhere; function keys are the exception.
+      if (!modifiers.length && !/^F\d+$/.test(event.code)) return;
+      stop();
+      latestOnChange.current({ modifiers, key: event.code });
+    };
+    const onKeyUp = (event: KeyboardEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
+      setHeld(modifiersOf(event));
+    };
+    const onPointerDown = (event: PointerEvent) => {
+      if (!button.current?.contains(event.target as Node)) stop();
+    };
+    window.addEventListener("keydown", onKeyDown, true);
+    window.addEventListener("keyup", onKeyUp, true);
+    window.addEventListener("pointerdown", onPointerDown, true);
+    window.addEventListener("blur", stop);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown, true);
+      window.removeEventListener("keyup", onKeyUp, true);
+      window.removeEventListener("pointerdown", onPointerDown, true);
+      window.removeEventListener("blur", stop);
+      setHeld([]);
+      void ipc.host.hotkey.toggleRecording({ enabled: false });
+    };
+  }, [recording]);
 
   return (
     <button
+      ref={button}
       type="button"
       autoFocus
       className={recording ? "hotkey-recorder recording" : "hotkey-recorder"}
-      onClick={() => toggle(!recording)}
-      onKeyDown={onKeyDown}
-      onKeyUp={(event) => recording && setHeld(modifiersOf(event))}
-      onBlur={() => toggle(false)}
+      onClick={() => setRecording((r) => !r)}
     >
       {recording ? (
         held.length ? <Keycaps caps={hotkeyCaps({ modifiers: held, key: "" }).filter(Boolean)} /> : "Press a shortcut…"
@@ -100,7 +118,7 @@ function Keycaps({ caps }: { caps: string[] }) {
   );
 }
 
-function modifiersOf(event: React.KeyboardEvent): Modifier[] {
+function modifiersOf(event: KeyboardEvent): Modifier[] {
   const modifiers: Modifier[] = [];
   if (event.ctrlKey) modifiers.push("control");
   if (event.altKey) modifiers.push("option");

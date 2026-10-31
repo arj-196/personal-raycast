@@ -61,7 +61,7 @@ function FocusTop({ depth }: { depth: number }) {
 
 function focusTop(select: boolean) {
   const top = document.querySelector<HTMLElement>(".stack-entry:not([hidden])");
-  const input = top?.querySelector<HTMLInputElement>("[data-search-input], input, textarea, button[autofocus]");
+  const input = top?.querySelector<HTMLInputElement>("[data-search-input], input, textarea");
   input?.focus();
   if (select) input?.select();
 }
